@@ -9,6 +9,7 @@ edition = "2021"
 anyhow = "1"
 env_logger = "0.10"
 log = "0.4"
+memmap2 = "0.9"
 wayland-client = "0.31"
 
 [dependencies.wayland-protocols]

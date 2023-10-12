@@ -41,7 +41,7 @@ pub(crate) fn create_pool(
     name: &str,
     size: usize,
     qh: &wc::QueueHandle<State>,
-) -> Result<wl_shm_pool::WlShmPool> {
+) -> Result<(wl_shm_pool::WlShmPool, std::os::fd::OwnedFd)> {
     use nix::sys::memfd;
     use std::os::fd::AsFd;
 
@@ -50,7 +50,7 @@ pub(crate) fn create_pool(
     let fd = memfd::memfd_create(&name, memfd::MemFdCreateFlag::empty())?;
     nix::unistd::ftruncate(fd.as_fd(), size as nix::libc::off_t)?;
 
-    Ok(shm.create_pool(fd.as_fd(), size, qh, UserData))
+    Ok((shm.create_pool(fd.as_fd(), size, qh, UserData), fd))
 }
 
 impl wc::Dispatch<wl_shm_pool::WlShmPool, UserData> for State {

@@ -41,7 +41,16 @@ fn main() -> Result<()> {
     let xdg_wm_base = globals.bind::<xdg_wm_base::XdgWmBase, State, UserData>(&qh, 4..=4, UserData)?;
     queue.roundtrip(&mut state)?;
     assert!(state.shm.formats.contains(&wl_shm::Format::Xrgb8888));
-    let shm_pool = shm::create_pool(&shm, "play-wayland wl_shm_pool", 512 * 512 * 4, &qh)?;
+    let (shm_pool, fd) = shm::create_pool(&shm, "play-wayland wl_shm_pool", 512 * 512 * 4, &qh)?;
+    let mut mapping = unsafe { memmap2::MmapMut::map_mut(std::os::fd::AsRawFd::as_raw_fd(&fd))? };
+    for (i, pixel) in mapping.chunks_mut(4).enumerate() {
+        let x = i >> 9;
+        let y = i & 511;
+        pixel[0] = (x / 2) as u8;
+        pixel[1] = (y / 2) as u8;
+        pixel[2] = 0;
+        pixel[3] = 255;
+    }
     let buffer = shm_pool.create_buffer(0, 512, 512, 512 * 4, wl_shm::Format::Xrgb8888, &qh, shm::UserData);
     let surface = compositor.create_surface(&qh, UserData);
     let xdg_surface = xdg_wm_base.get_xdg_surface(&surface, &qh, UserData);

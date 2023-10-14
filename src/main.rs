@@ -44,14 +44,35 @@ fn main() -> Result<()> {
     let (shm_pool, fd) = shm::create_pool(&shm, "play-wayland wl_shm_pool", 512 * 512 * 4, &qh)?;
     let mut mapping = unsafe { memmap2::MmapMut::map_mut(std::os::fd::AsRawFd::as_raw_fd(&fd))? };
     for (i, pixel) in mapping.chunks_mut(4).enumerate() {
-        let x = i >> 9;
-        let y = i & 511;
-        pixel[0] = (x / 2) as u8;
-        pixel[1] = (y / 2) as u8;
-        pixel[2] = 0;
-        pixel[3] = 255;
+        // We're going to draw a partially transparent circle filled
+        // with a blue-green gradient.
+        //
+        // Our buffer is in `Argb8888` format: 32 bits per pixel,
+        // providing red, green, blue, and alpha. The `Argb` means
+        // that `A` is the most significant byte and `b` the least.
+        // These appear in little-endian byte order, so `A` is the
+        // third byte, and `b` is the first.
+        let x = i & 511;
+        let y = i >> 9;
+        let in_circle = {
+            let cx = x as i32 - 256;
+            let cy = y as i32 - 256;
+            cx * cx + cy * cy < 200 * 200
+        };
+        if in_circle {
+            pixel[0] = (x / 2) as u8;
+            pixel[1] = (y / 2) as u8;
+            pixel[2] = 0;
+            pixel[3] = 192; // mostly opaque
+        } else {
+            pixel[0] = 0;
+            pixel[1] = 0;
+            pixel[2] = 0;
+            pixel[3] = 0; // transparent
+            
+        }
     }
-    let buffer = shm_pool.create_buffer(0, 512, 512, 512 * 4, wl_shm::Format::Xrgb8888, &qh, shm::UserData);
+    let buffer = shm_pool.create_buffer(0, 512, 512, 512 * 4, wl_shm::Format::Argb8888, &qh, shm::UserData);
     let surface = compositor.create_surface(&qh, UserData);
     let xdg_surface = xdg_wm_base.get_xdg_surface(&surface, &qh, UserData);
     let xdg_toplevel = xdg_surface.get_toplevel(&qh, UserData);

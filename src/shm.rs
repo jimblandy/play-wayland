@@ -55,7 +55,7 @@ pub(crate) fn create_pool(
 
 impl wc::Dispatch<wl_shm_pool::WlShmPool, UserData> for State {
     fn event(
-        state: &mut State,
+        _state: &mut State,
         _proxy: &wl_shm_pool::WlShmPool,
         event: wl_shm_pool::Event,
         _data: &UserData,

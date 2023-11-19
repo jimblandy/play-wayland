@@ -1,15 +1,12 @@
-#![allow(unused_imports, unused_variables, dead_code)]
-
 mod shm;
 
 use anyhow::Result;
 use wayland_client as wc;
-use wayland_client::protocol::{wl_callback, wl_compositor, wl_display, wl_registry, wl_shm, wl_buffer};
-use wc::protocol::{wl_shm_pool, wl_surface};
+use wayland_client::protocol::{wl_compositor, wl_registry, wl_shm, wl_buffer};
+use wc::protocol::wl_surface;
 use wayland_protocols::xdg::shell::client::{xdg_wm_base, xdg_surface, xdg_toplevel};
 
 struct State {
-    exit: bool,
     shm: shm::Shm,
 }
 
@@ -22,7 +19,6 @@ fn main() -> Result<()> {
     let (globals, mut queue) = wc::globals::registry_queue_init::<State>(&connection).unwrap();
     let qh = queue.handle();
     let mut state = State {
-        exit: false,
         shm: shm::Shm::default(),
     };
 
@@ -82,6 +78,7 @@ fn main() -> Result<()> {
     state.shm.dump_formats();
     std::thread::sleep(std::time::Duration::from_secs(5));
 
+    drop(xdg_toplevel);
     Ok(())
 }
 
@@ -113,7 +110,7 @@ impl wc::Dispatch<wl_compositor::WlCompositor, UserData> for State {
 
 impl wc::Dispatch<wl_buffer::WlBuffer, UserData> for State {
     fn event(
-        state: &mut State,
+        _state: &mut State,
         _proxy: &wl_buffer::WlBuffer,
         event: wl_buffer::Event,
         _data: &UserData,

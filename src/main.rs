@@ -4,7 +4,7 @@ mod shm;
 
 use anyhow::Result;
 use wayland_client as wc;
-use wayland_client::protocol::{wl_callback, wl_compositor, wl_display, wl_registry, wl_shm};
+use wayland_client::protocol::{wl_callback, wl_compositor, wl_display, wl_registry, wl_shm, wl_buffer};
 use wc::protocol::{wl_shm_pool, wl_surface};
 use wayland_protocols::xdg::shell::client::{xdg_wm_base, xdg_surface, xdg_toplevel};
 
@@ -72,7 +72,7 @@ fn main() -> Result<()> {
             
         }
     }
-    let buffer = shm_pool.create_buffer(0, 512, 512, 512 * 4, wl_shm::Format::Argb8888, &qh, shm::UserData);
+    let buffer = shm_pool.create_buffer(0, 512, 512, 512 * 4, wl_shm::Format::Argb8888, &qh, UserData);
     let surface = compositor.create_surface(&qh, UserData);
     let xdg_surface = xdg_wm_base.get_xdg_surface(&surface, &qh, UserData);
     let xdg_toplevel = xdg_surface.get_toplevel(&qh, UserData);
@@ -108,6 +108,19 @@ impl wc::Dispatch<wl_compositor::WlCompositor, UserData> for State {
         _qhandle: &wc::QueueHandle<Self>,
     ) {
         log::trace!("Got wl_compositor event: {:?}", event);
+    }
+}
+
+impl wc::Dispatch<wl_buffer::WlBuffer, UserData> for State {
+    fn event(
+        state: &mut State,
+        _proxy: &wl_buffer::WlBuffer,
+        event: wl_buffer::Event,
+        _data: &UserData,
+        _conn: &wc::Connection,
+        _qhandle: &wc::QueueHandle<State>,
+    ) {
+        log::trace!("Got unexpected wl_shm_pool event: {:?}", event);
     }
 }
 

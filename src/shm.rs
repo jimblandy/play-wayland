@@ -2,7 +2,7 @@ use super::State;
 
 use anyhow::Result;
 use wayland_client as wc;
-use wayland_client::protocol::{wl_buffer, wl_shm, wl_shm_pool};
+use wayland_client::protocol::{wl_shm, wl_shm_pool};
 
 #[derive(Default)]
 pub struct Shm {
@@ -58,19 +58,6 @@ impl wc::Dispatch<wl_shm_pool::WlShmPool, UserData> for State {
         state: &mut State,
         _proxy: &wl_shm_pool::WlShmPool,
         event: wl_shm_pool::Event,
-        _data: &UserData,
-        _conn: &wc::Connection,
-        _qhandle: &wc::QueueHandle<State>,
-    ) {
-        log::trace!("Got unexpected wl_shm_pool event: {:?}", event);
-    }
-}
-
-impl wc::Dispatch<wl_buffer::WlBuffer, UserData> for State {
-    fn event(
-        state: &mut State,
-        _proxy: &wl_buffer::WlBuffer,
-        event: wl_buffer::Event,
         _data: &UserData,
         _conn: &wc::Connection,
         _qhandle: &wc::QueueHandle<State>,

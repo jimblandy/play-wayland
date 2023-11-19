@@ -1,3 +1,4 @@
+mod buffer;
 mod draw;
 mod shm;
 
@@ -38,14 +39,14 @@ fn main() -> Result<()> {
     let xdg_wm_base = globals.bind::<xdg_wm_base::XdgWmBase, State, UserData>(&qh, 4..=4, UserData)?;
     queue.roundtrip(&mut state)?;
     assert!(state.shm.formats.contains(&wl_shm::Format::Xrgb8888));
-    let desc = draw::BufferDescriptor {
+    let desc = buffer::BufferDescriptor {
         width: 512,
         height: 512,
         stride: 512 * 4,
         format: wl_shm::Format::Xrgb8888,
     };
     let (shm_pool, fd) = shm::create_pool(&shm, "play-wayland wl_shm_pool", desc.size(), &qh)?;
-    let mut buffer = draw::MmapBuffer::from_shm_pool(desc, fd, &shm_pool, &qh)?;
+    let mut buffer = buffer::MmapBuffer::from_shm_pool(desc, fd, &shm_pool, &qh)?;
     draw::draw(&mut buffer);
     let surface = compositor.create_surface(&qh, UserData);
     let xdg_surface = xdg_wm_base.get_xdg_surface(&surface, &qh, UserData);

@@ -47,7 +47,7 @@ fn main() -> Result<()> {
     };
     let (shm_pool, fd) = shm::create_pool(&shm, "play-wayland wl_shm_pool", desc.size(), &qh)?;
     let mut buffer = buffer::MmapBuffer::from_shm_pool(desc, fd, &shm_pool, &qh)?;
-    draw::draw(&mut buffer);
+    draw::draw(&mut buffer)?;
     let surface = compositor.create_surface(&qh, UserData);
     let xdg_surface = xdg_wm_base.get_xdg_surface(&surface, &qh, UserData);
     let xdg_toplevel = xdg_surface.get_toplevel(&qh, UserData);

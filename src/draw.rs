@@ -36,7 +36,7 @@ pub fn draw(buf: &mut MmapBuffer) -> Result<()> {
         pixel[0] = ((x / 2) * alpha as usize / 255) as u8;
         pixel[1] = ((y / 2) * alpha as usize / 255) as u8;
         pixel[2] = 0;
-        pixel[3] = alpha; // mostly opaque
+        pixel[3] = alpha;
     }
 
     Ok(())

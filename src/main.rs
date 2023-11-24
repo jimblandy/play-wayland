@@ -1,6 +1,8 @@
 mod buffer;
 mod draw;
+mod registry;
 mod shm;
+mod react;
 
 use anyhow::Result;
 use wayland_client as wc;
@@ -18,23 +20,28 @@ fn main() -> Result<()> {
     env_logger::init();
 
     let connection = wc::Connection::connect_to_env()?;
-    let (globals, mut queue) = wc::globals::registry_queue_init::<State>(&connection).unwrap();
-    let qh = queue.handle();
     let mut state = State {
         shm: shm::Shm::default(),
     };
 
-    println!("Globals:");
-    globals.contents().with_list(|globals| {
-        for global in globals {
+    let queue = connection.new_event_queue();
+    let display = connection.display();
+    let qh = queue.handle();
+    let registry_data = registry::new();
+    let registry = display.get_registry(&qh, registry_data.clone());
+    queue.roundtrip(&mut state)?;
+    {
+        println!("Globals:");
+        let registry_data = registry_data.lock().unwrap();
+        for (name, global) in &registry_data.globals {
             println!(
                 "    {} v{}: {}",
-                global.interface, global.version, global.name
+                global.interface, global.version, name
             );
         }
-    });
+    }
 
-    let shm = globals.bind::<wl_shm::WlShm, State, shm::UserData>(&qh, 1..=1, shm::UserData)?;
+    let shm = registry.bind::<wl_shm::WlShm, State, shm::UserData>(&qh, 1..=1, shm::UserData)?;
     let compositor = globals.bind::<wl_compositor::WlCompositor, State, UserData>(&qh, 5..=5, UserData)?;
     let xdg_wm_base = globals.bind::<xdg_wm_base::XdgWmBase, State, UserData>(&qh, 4..=4, UserData)?;
     queue.roundtrip(&mut state)?;
@@ -61,16 +68,16 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-impl wc::Dispatch<wl_registry::WlRegistry, wc::globals::GlobalListContents> for State {
+impl wc::Dispatch<wl_registry::WlRegistry, registry::UserData> for State {
     fn event(
-        _state: &mut State,
-        _proxy: &wl_registry::WlRegistry,
+        state: &mut State,
+        proxy: &wl_registry::WlRegistry,
         event: wl_registry::Event,
-        _data: &wc::globals::GlobalListContents,
-        _conn: &wc::Connection,
-        _qhandle: &wc::QueueHandle<Self>,
+        data: &registry::UserData,
+        conn: &wc::Connection,
+        qhandle: &wc::QueueHandle<Self>,
     ) {
-        log::trace!("Got wl_registry event: {:?}", event);
+        registry::RegistryState::event(state, proxy, event, data, conn, qhandle);
     }
 }
 

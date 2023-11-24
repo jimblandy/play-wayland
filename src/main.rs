@@ -1,6 +1,7 @@
 mod buffer;
 mod draw;
 mod shm;
+mod react;
 
 use anyhow::Result;
 use wayland_client as wc;
@@ -18,6 +19,8 @@ fn main() -> Result<()> {
     env_logger::init();
 
     let connection = wc::Connection::connect_to_env()?;
+    let display = connection.display();
+    let registry = display.get_registry(;
     let (globals, mut queue) = wc::globals::registry_queue_init::<State>(&connection).unwrap();
     let qh = queue.handle();
     let mut state = State {

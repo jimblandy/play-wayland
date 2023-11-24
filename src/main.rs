@@ -38,12 +38,12 @@ fn main() -> Result<()> {
     let compositor = globals.bind::<wl_compositor::WlCompositor, State, UserData>(&qh, 5..=5, UserData)?;
     let xdg_wm_base = globals.bind::<xdg_wm_base::XdgWmBase, State, UserData>(&qh, 4..=4, UserData)?;
     queue.roundtrip(&mut state)?;
-    assert!(state.shm.formats.contains(&wl_shm::Format::Xrgb8888));
+    assert!(state.shm.formats.contains(&wl_shm::Format::Argb8888));
     let desc = buffer::BufferDescriptor {
         width: 512,
         height: 512,
         stride: 512 * 4,
-        format: wl_shm::Format::Xrgb8888,
+        format: wl_shm::Format::Argb8888,
     };
     let (shm_pool, fd) = shm::create_pool(&shm, "play-wayland wl_shm_pool", desc.size(), &qh)?;
     let mut buffer = buffer::MmapBuffer::from_shm_pool(desc, fd, &shm_pool, &qh)?;

@@ -12,7 +12,7 @@ use pathfinder_geometry::{
 };
 
 pub fn draw(buf: &mut MmapBuffer) -> Result<()> {
-    // We're going to draw a hiragana 'あ' character filled
+    // We're going to draw the Japanese kanji '響' ('echo') filled
     // with a blue-green gradient.
     //
     // Our buffer is in `Argb8888` format: 32 bits per pixel,
@@ -21,6 +21,8 @@ pub fn draw(buf: &mut MmapBuffer) -> Result<()> {
     // These appear in little-endian byte order, so `A` is the
     // third byte, and `b` is the first.
 
+    // First, let `font_kit` rasterize the glyph into its own
+    // `font_kit::canvas::Canvas`.
     let canvas = rasterize_glyph(512, 400.0, 400.0)?;
     assert_eq!(canvas.format, Format::A8);
 
@@ -49,8 +51,8 @@ fn rasterize_glyph(canvas_size: i32, glyph_size: f32, baseline: f32) -> Result<C
         let handle = font_kit::handle::Handle::from_path(font_path, 0);
         handle.load()?
     };
-    let Some(glyph_id) = font.glyph_for_char('あ') else {
-        bail!("Couldn't find glyph in {} for 'あ'", font.full_name());
+    let Some(glyph_id) = font.glyph_for_char('響') else {
+        bail!("Couldn't find glyph in {} for '響'", font.full_name());
     };
 
     let mut canvas = Canvas::new(Vector2I::splat(canvas_size), Format::A8);

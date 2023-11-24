@@ -36,7 +36,15 @@ impl MmapBuffer {
     ) -> Result<MmapBuffer>
     {
         let bytes = unsafe { MmapMut::map_mut(fd.as_raw_fd())? };
-        let id = shm_pool.create_buffer(0, 512, 512, 512 * 4, wl_shm::Format::Argb8888, &qh, UserData);
+        let id = shm_pool.create_buffer(
+            0,
+            i32::try_from(desc.width).unwrap(),
+            i32::try_from(desc.height).unwrap(),
+            i32::try_from(desc.stride).unwrap(),
+            desc.format,
+            qh,
+            UserData
+        );
         Ok(MmapBuffer { id, desc, bytes })
     }
 }
